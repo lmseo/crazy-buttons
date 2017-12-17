@@ -1,9 +1,33 @@
 (function ($, global){
-  var arr = [];
+  var arr = [],
 
-  var slice = arr.slice;
+  slice = arr.slice,
 
-  var sel,
+  buttonTypes = {
+    primary: 'btn-primary',
+    success: 'btn-success',
+    info: 'btn-info',
+    warning: 'btn-warning'
+  },
+
+  buttonDefaultCSS = [
+    'btn',
+    'btn-primary',
+    'crazy', 
+    'centeBtn'
+  ],
+
+  buttonDefaultText = [
+    'I\'m dynamic',
+    'Catch me',
+    'Click me',
+    'Rrrrrg', 
+    'Not again!',
+    'Go away!!',
+    'You didn\'t see me'
+  ],
+
+  sel,
 
   version = 1.0,
 
@@ -19,7 +43,7 @@
       version: version,
 
       getVersion: function(){
-        console.log(this.version);
+        console.log( this.version );
       },
       getElements: function(){
         return this.elementsArray;
@@ -35,7 +59,7 @@
       getSelector:function(){
         return this.selector;
       },
-      setSelector:function(selector){
+      setSelector:function( selector ){
         return new Crazy.init(selector); 
       },
       displaySelector:function(){
@@ -48,7 +72,7 @@
       toArray: function() {
         return slice.call( this.elementsArray );
       },
-        // Get the Nth element in the matched element set OR
+      // Get the Nth element in the matched element set OR
       // Get the whole matched element set as a clean array
       get: function( num ) {
         return num != null ?
@@ -59,6 +83,7 @@
           // Return just the object
           slice.call( this.elementsArray );
       },
+      //log: Chainable method 
       log: function(){
         if(console){
           console.log(this);
@@ -85,7 +110,6 @@
     }
     
     //buttonsGo function that makes the button's position go crazy
-
     function buttonsGo(){
       self = this;
       setTimeout(function(){
@@ -102,63 +126,92 @@
       },300);
       
     }
-
-    Crazy.prototype.crazyButtons = function(wrapper, numberOfButtons, text, selector){
+    //crazyButtons chainable method creates buttons dynamically
+    //wrapper: element to attach buttons
+    //numberOfButtons: # of buttons
+    //text: Button text. If empty random
+    //cssClasses: Button css classes. If empty use default
+    Crazy.prototype.crazyButtons = function( wrapper, numberOfButtons, text, cssClasses ){
       var buttons, 
       self = this;
+      //HANDLE: Don't create more than 100 buttons
+      if( numberOfButtons > 100){
+        numberOfButtons = 100;
+        console.log( 'no more than: ' + numberOfButtons)
+      }
       if( !wrapper ){
-        buttons = createButtons(numberOfButtons);
-        if(Array.isArray(buttons)){
-          for (var i = 0; i < buttons.length; i++) {
+        buttons = createButtons( numberOfButtons, text, cssClasses);
+        if( Array.isArray( buttons ) ){
+          for ( var i = 0; i < buttons.length; i++ ) {
             doc.body.appendChild(buttons[i]);
           }
           return new Crazy.init(this.selector);
         }
       }else{   
-        if ( typeof wrapper === "string" ) {
+        if( typeof wrapper === "string" ) {
           self.wrapper = $(wrapper);
-           buttons = createButtons(numberOfButtons);
-           console.log(buttons.length);
+          buttons = createButtons( numberOfButtons, text, cssClasses );
           if(Array.isArray(buttons)){
             for (var i = 0; i < buttons.length; i++) {
               self.wrapper.append(buttons[i]);
             }
-            return new Crazy.init(this.selector);
+            return new Crazy.init( this.selector );
           }
         }  
       }
+      return self;
     }
-    function createButtons(numberOfButtons, text, cssClass){
+    function createButtons(numberOfButtons, text, cssClasses){
       var buttons = [];
-      if( !numberOfButtons ){
-        buttons[0] = doc.createElement('button');
-        // Create a text node
-        var t = doc.createTextNode("I'm dynamic"); 
-        buttons[0].appendChild(t);     
-        buttons[0].classList.add(
-          'btn', 
-          'btn-primary', 
-          'crazy', 
-          'centeBtn'
-        );
-        return buttons;
+      var btnCssClasses = [];
+      var btnCssClassesStr = '';
+      // HANDLE: var text (""), (null), (undefined), (false)
+      if(!text){
+        text = false;
       }else{
-        for (var i = 0; i < numberOfButtons; i++) {
-          var button = doc.createElement('button');
-          buttons[i] = button;
-          var t = doc.createTextNode("I'm dynamic"); 
-          buttons[i].appendChild(t);     
-          buttons[i].classList.add(
-            'btn', 
-            'btn-primary', 
-            'crazy', 
-            'centeBtn'
-          );
+        if(typeof text === "string"){
+          text = text;
+        }else{
+          text = false;
         }
-        return buttons;
       }
-      return null;
-
+      // HANDLE: var cssClasses (""), (null), (undefined), (false)
+      if(!cssClasses){
+        btnCssClasses = buttonDefaultCSS.slice();
+      }else{
+        //HANDLE: cssClasses str add to default css array
+        if(typeof cssClasses === "string"){
+          btnCssClasses = buttonDefaultCSS.slice();
+          btnCssClasses.push(cssClasses);
+          console.log(cssClasses);
+        //HANDLE: cssClasses is Array replaces default css array
+        }else if(Array.isArray(cssClasses)){
+          btnCssClasses = cssClasses.slice();
+        }
+      }
+      // HANDLE: var numberOfButtons (""), (null), (undefined), (false)
+      if( !numberOfButtons ){
+        numberOfButtons = 1;
+      }
+      //creates str with all the css classes
+      btnCssClasses.forEach(function(el){
+        btnCssClassesStr += el + ' ' ;
+      });
+      //Create buttons
+      for (var i = 0; i < numberOfButtons; i++) {
+        var btnText = text;
+        var button = doc.createElement('button');
+        buttons[i] = button;
+        //HANDLE: If text not str or not set pick a random from Array
+        if(btnText === false){
+          btnText = buttonDefaultText[Math.floor(Math.random() * buttonDefaultText.length)];
+        }
+        var t = doc.createTextNode(btnText); 
+        buttons[i].appendChild(t); 
+          
+        buttons[i].className = btnCssClassesStr;
+      }
+      return buttons;
     }
     //new Crazy.init(selector) creates a Crazy object bc init.prototype points to Crazy.prototype
     Crazy.init.prototype = Crazy.prototype;
